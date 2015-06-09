@@ -151,7 +151,7 @@
 //    [self calculateFrame];
 //    [self setupViews];
     
-    UIView *window = [[[UIApplication sharedApplication] delegate] window];
+    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
     
     if (self.shouldDimBackgroundWhenShowInWindow) {
         self.blackOpaqueView = [[UIView alloc] initWithFrame:window.bounds];
@@ -162,7 +162,17 @@
         [window addSubview:self.blackOpaqueView];
     }
     
-    [self showInView:window];
+    [self calculateFrame];
+    [self setupViews];
+
+    if ( ! hasModifiedFrame) {
+        CGRect modifiedWindowFrame = [self currentScreenBoundsDependOnOrientation];
+        self.frame = CGRectMake((CGRectGetWidth(modifiedWindowFrame) - self.frame.size.width )/2, (CGRectGetHeight(modifiedWindowFrame) - self.frame.size.height) /2, self.frame.size.width, self.frame.size.height);
+    }
+    
+    [self willAppearAlertView];
+    
+    [self addThisViewToView:window.rootViewController.view];
 }
 
 - (void)outsideTap:(UITapGestureRecognizer *)recognizer
@@ -726,5 +736,29 @@
     // Drawing code
 }
 */
+
+# pragma mark - Modify frame for iOS 7
+
+
+- (CGRect)currentScreenBoundsDependOnOrientation {
+    CGRect windowFrame = [UIScreen mainScreen].bounds ;
+    
+    if ([[[UIDevice currentDevice] systemVersion] compare:@"8.0" options:NSNumericSearch] != NSOrderedAscending) {
+        return windowFrame;
+    }
+    
+    CGFloat width = CGRectGetWidth(windowFrame)  ;
+    CGFloat height = CGRectGetHeight(windowFrame) ;
+    UIInterfaceOrientation interfaceOrientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if(UIInterfaceOrientationIsPortrait(interfaceOrientation)){
+        windowFrame.size = CGSizeMake(width, height);
+    }
+    else if(UIInterfaceOrientationIsLandscape(interfaceOrientation)){
+        windowFrame.size = CGSizeMake(height, width);
+    }
+    
+    return windowFrame ;
+}
 
 @end
